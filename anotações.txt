@@ -1,0 +1,11 @@
+ 
+ os middleware são uma forma de compartilhamentos de dados entre aplicações ou
+ entre APIs  
+ middleware são utilizados para colocar condicionantes em requisições.
+ podem ser utilizados como segundo parâmetro da requisição :
+    
+    
+    app.get('/statement',middleware1, middleware2,middleware3 (request, response) => {
+	if (!customer) {
+
+    ou como parâmetro da função app.use(middleware)
