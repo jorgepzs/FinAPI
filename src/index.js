@@ -1,31 +1,43 @@
 const express = require('express')
+const {v4:uuidv4 } = require("uuid")
 
 const app = express()
-
+const customers = []
 app.use(express.json())
 
-app.get("/courses", (request, response) => {
-    const query = request.query
-    console.log(query)
-    return response.json(["Curso 1", "Curso 2", "Curso 3"])
-});
+app.post("/account", (request, response)=> {
+    const {name, cpf} = request.body
+   
+    const customersAlreadyExists = customers.some(
+       (customer)=> customer.cpf === cpf
+       )
 
-app.post("/courses", (request, response) => {
-    const body = request.body
-    console.log(body)
-    return response.json(["Curso 1", "Curso 2", "Curso 3", "Curso 4"])
-});
+   if (customersAlreadyExists){
+       response.status(400).json({ error:"cpf already registered!"})
+   }
+    
 
-app.put("/courses/:id", (request, response) => {
-    const { id } = request.params
-    console.log(id)
-    return response.json(["Curso 1", "Curso 2", "Curso 3", "Curso y"])
-})
-app.patch("/courses/:id", (request, response) => {
-    return response.json(["Curso 1", "Curso A", "Curso 3", "Curso 4"])
+    customers.push({
+        cpf,
+        name,
+        id: uuidv4(),
+        statement:[],
+    })
+return response.status(201).send()
 })
 
-app.delete("/courses/:id", (request, response) => {
-    return response.json(["Curso 1", "Curso 3", "Curso 4"])
-})
+app.get("/statement", (request, response) => {
+ const { cpf } = request.headers
+
+ const customer = customers.find((customer) => customer.cpf === cpf )
+
+if (!customer) {
+  return response.status(400).json({ error: "Customer not found"})
+}
+
+
+ return response.json(customer.statement)
+} )
+
+
 app.listen(3333)
