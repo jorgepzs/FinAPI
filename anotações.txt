@@ -9,3 +9,9 @@
 	if (!customer) {
 
     ou como parâmetro da função app.use(middleware)
+
+
+
+
+    const customersAlreadyExists = customers.some(
+		(customer) => customer.cpf === cpf

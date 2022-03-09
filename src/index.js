@@ -13,7 +13,7 @@ function verifyIfExistsAccountCPF(request, response, next) {
 	const customer = customers.find((customer) => customer.cpf === cpf);
 
 	if (!customer) {
-		return response.status(400).json({ error: 'cpf already registered!' });
+		return response.status(400).json({ error: 'Customer not found!' });
 	}
 
 	request.customer = customer;
@@ -23,7 +23,7 @@ function verifyIfExistsAccountCPF(request, response, next) {
 
 function getBalance(statement) {
 	const balance = statement.reduce((acc, operation) => {
-		if (operation === 'credit') {
+		if (operation.type === 'credit') {
 			return acc + operation.amount;
 		} else {
 			return acc - operation.amount;
@@ -73,7 +73,7 @@ app.post('/deposit', verifyIfExistsAccountCPF, (request, response) => {
 
 	customer.statement.push(statementOperation);
 
-	return response.status(201).send;
+	return response.status(201).send();
 });
 
 app.post('/withdraw', verifyIfExistsAccountCPF, (request, response) => {
@@ -83,7 +83,7 @@ app.post('/withdraw', verifyIfExistsAccountCPF, (request, response) => {
 	const balance = getBalance(customer.statement);
 
 	if (balance < amount) {
-		response.status(400).json({ error: 'insufficiente fundds!' });
+		return response.status(400).json({ error: 'insufficiente funds!' });
 	}
 
 	const statementOperation = {
@@ -94,7 +94,50 @@ app.post('/withdraw', verifyIfExistsAccountCPF, (request, response) => {
 
 	customer.statement.push(statementOperation);
 
-	return response(201).send();
+	return response.status(201).send();
 });
 
+app.get('/statement/date', verifyIfExistsAccountCPF, (request, response) => {
+	const { customer } = request;
+	const { date } = request.query;
+
+	const dateFormat = new Date(date + ' 00:00');
+
+	const statement = customer.statement.filter(
+		(statement) =>
+			statement.created_at.toDateString() ===
+			new Date(dateFormat).toDateString()
+	);
+
+	return response.json(statement);
+});
+
+app.put('/account', verifyIfExistsAccountCPF, (request, response) => {
+	const { name } = request.body;
+	const { customer } = request;
+
+	customer.name = name;
+
+	return response.status(201).send();
+});
+
+app.get('/account', verifyIfExistsAccountCPF, (request, response) => {
+	const { customer } = request;
+	return response.json(customer);
+});
+
+app.delete('/account', verifyIfExistsAccountCPF, (request, response) => {
+	const { customer } = request;
+
+	customers.splice(customer, 1);
+
+	return response.status(200).json(customers);
+});
+
+app.get('/balance', verifyIfExistsAccountCPF, (request, response) => {
+	const { customer } = request;
+	const balance = getBalance(customer.statement);
+
+	return response.json(balance);
+});
 app.listen(3333);
